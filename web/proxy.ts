@@ -1,8 +1,10 @@
-import type { NextRequest } from "next/server";
-import { updateSession } from "@/lib/supabase/middleware";
+import { NextResponse, type NextRequest } from "next/server";
 
-export async function proxy(request: NextRequest) {
-  return await updateSession(request);
+// Pass-through proxy: PIN-based auth is handled entirely client-side via
+// localStorage. Pages themselves redirect to /entrar when the member isn't
+// loaded. No Supabase session needs to be tracked at the edge anymore.
+export function proxy(_request: NextRequest) {
+  return NextResponse.next();
 }
 
 export const config = {

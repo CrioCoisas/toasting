@@ -1,10 +1,17 @@
-import type { Metadata } from "next";
-import { Inter, Schoolbell } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Inter, DM_Mono, Schoolbell } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const dmMono = DM_Mono({
+  variable: "--font-dm-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 const schoolbell = Schoolbell({
@@ -18,6 +25,13 @@ export const metadata: Metadata = {
   description: "Acesso exclusivo aos restaurantes da casa.",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#ffffff",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,9 +40,13 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${inter.variable} ${schoolbell.variable} h-full antialiased`}
+      className={`${inter.variable} ${dmMono.variable} ${schoolbell.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full">
+        <div className="mx-auto max-w-[430px] min-h-screen bg-white relative overflow-hidden shadow-2xl">
+          {children}
+        </div>
+      </body>
     </html>
   );
 }
