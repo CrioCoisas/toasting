@@ -43,6 +43,7 @@ export async function updateSession(request: NextRequest) {
   const isPublic =
     url.pathname === "/" ||
     url.pathname.startsWith("/login") ||
+    url.pathname.startsWith("/entrar") ||
     url.pathname.startsWith("/convite") ||
     url.pathname.startsWith("/sobre") ||
     url.pathname.startsWith("/garcom/login") ||

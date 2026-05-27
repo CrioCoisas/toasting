@@ -13,7 +13,7 @@ export default function Home() {
         </p>
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
-            href="/login"
+            href="/entrar"
             className="flex h-12 items-center justify-center rounded-full bg-accent px-8 text-sm font-medium text-cream transition-opacity hover:opacity-90"
           >
             Entrar

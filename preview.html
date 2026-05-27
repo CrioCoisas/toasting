@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Toasting — Preview de telas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Schoolbell&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f2e8;
+      --fg: #1c1814;
+      --surface: #ffffff;
+      --accent: #1c1814;
+      --cream: #f2e5a8;
+      --muted: #6e6862;
+      --border: #e5ddc8;
+      --danger: #b14747;
+      --success: #4a7f5e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f0d0a;
+      color: #e5ddc8;
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    h1.page-title {
+      font-family: 'Schoolbell', cursive;
+      font-size: 48px;
+      text-align: center;
+      color: #f2e5a8;
+      margin-bottom: 8px;
+    }
+    .page-sub {
+      text-align: center;
+      color: #6e6862;
+      font-size: 14px;
+      margin-bottom: 48px;
+    }
+    .frames {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 32px;
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+    .frame-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .frame-label {
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #b8b1a0;
+    }
+    .frame-route {
+      font-size: 11px;
+      font-family: monospace;
+      color: #6e6862;
+    }
+    .phone {
+      width: 360px;
+      height: 720px;
+      border-radius: 36px;
+      background: var(--bg);
+      color: var(--fg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      border: 2px solid #2a261f;
+    }
+    .phone-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    /* Member header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(4px);
+    }
+    .header .brand {
+      font-family: 'Schoolbell', cursive;
+      font-size: 22px;
+      color: var(--fg);
+    }
+    .header .logout {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    /* Generic */
+    .stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .display-h1 {
+      font-family: 'Schoolbell', cursive;
+      color: var(--fg);
+    }
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .foreground { color: var(--fg); }
+    /* Pill buttons */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      padding: 0 28px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+    }
+    .pill.primary {
+      background: var(--accent);
+      color: var(--cream);
+    }
+    .pill.secondary {
+      background: var(--surface);
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+    /* Input */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+    }
+    .field-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      text-align: left;
+    }
+    .input {
+      height: 44px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 0 12px;
+      font-size: 14px;
+      color: var(--fg);
+      font-family: inherit;
+      outline: none;
+    }
+    /* Generic full-width pill */
+    .pill-full {
+      width: 100%;
+      margin-top: 8px;
+    }
+    /* Convite header card */
+    .tier-card {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(242,229,168,0.3);
+      padding: 16px;
+      text-align: center;
+      margin: 24px 0;
+    }
+    .tier-card .eyebrow {
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .tier-card .tier {
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    .tier-card .tier b { font-weight: 600; }
+    /* Generate button */
+    .big-circle {
+      width: 176px;
+      height: 176px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 500;
+      text-align: center;
+      line-height: 1.3;
+      box-shadow: 0 8px 24px rgba(28,24,20,0.3);
+      cursor: pointer;
+      border: none;
+      margin: 32px 0;
+    }
+    /* Code display */
+    .code-eyebrow {
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .code-digits {
+      display: flex;
+      gap: 6px;
+      margin-top: 16px;
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 64px;
+      font-weight: 600;
+      letter-spacing: 4px;
+      color: var(--fg);
+      font-variant-numeric: tabular-nums;
+    }
+    .code-name {
+      margin-top: 20px;
+      font-weight: 500;
+      color: var(--fg);
+    }
+    .code-tenant {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .timer {
+      margin-top: 24px;
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 22px;
+      color: var(--muted);
+    }
+    /* form */
+    form { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+    .stack { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+    .center-stack { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .mt-2 { margin-top: 8px; }
+    .small { font-size: 11px; }
+    .center { text-align: center; }
+    /* Footer note */
+    .footer-note {
+      margin-top: 16px;
+      font-size: 11px;
+      color: var(--muted);
+      max-width: 260px;
+      text-align: center;
+    }
+    .cancel {
+      margin-top: 16px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      text-decoration: underline;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    /* Description small */
+    .desc { font-size: 13px; line-height: 1.6; max-width: 260px; }
+  </style>
+</head>
+<body>
+  <h1 class="page-title">Toasting</h1>
+  <p class="page-sub">Preview de telas — Schoolbell + Inter + paleta creme</p>
+
+  <div class="frames">
+
+    <!-- 1. LANDING -->
+    <div class="frame-wrap">
+      <div class="frame-label">1. Landing</div>
+      <div class="frame-route">/</div>
+      <div class="phone">
+        <div class="phone-content">
+          <div class="stage center-stack">
+            <h1 class="display-h1" style="font-size: 72px;">Toasting</h1>
+            <p class="muted desc">Clube de benefícios da casa. Um lugar pra brindar com quem importa, nos restaurantes que importam.</p>
+            <div style="display: flex; gap: 10px; margin-top: 12px;">
+              <button class="pill primary">Entrar</button>
+              <button class="pill secondary">Sobre o clube</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. LOGIN -->
+    <div class="frame-wrap">
+      <div class="frame-label">2. Login (magic link)</div>
+      <div class="frame-route">/login</div>
+      <div class="phone">
+        <div class="phone-content">
+          <div class="stage" style="justify-content: center;">
+            <div style="width: 100%; max-width: 280px;">
+              <h1 class="display-h1 center" style="font-size: 44px;">Toasting</h1>
+              <p class="muted center" style="margin-top: 6px; margin-bottom: 28px;">Entrar é simples — só mandamos um link no seu email.</p>
+              <form>
+                <div class="stack">
+                  <span class="field-label">Email</span>
+                  <input class="input" type="email" placeholder="seu@email.com" />
+                </div>
+                <button class="pill primary pill-full">Receber link de entrada</button>
+              </form>
+              <p class="muted center small" style="margin-top: 20px;">Foi convidado? <span class="foreground">Abra o link que você recebeu.</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. CONVITE -->
+    <div class="frame-wrap">
+      <div class="frame-label">3. Cadastro via convite</div>
+      <div class="frame-route">/convite/PILOT-TEST</div>
+      <div class="phone">
+        <div class="phone-content">
+          <div class="stage" style="justify-content: flex-start; padding-top: 32px;">
+            <div style="width: 100%; max-width: 280px;">
+              <h1 class="display-h1 center" style="font-size: 44px;">Toasting</h1>
+              <div class="tier-card">
+                <p class="eyebrow">Você foi convidado</p>
+                <p class="tier"><b>Amigos</b> · 10% no Grupo Piloto</p>
+              </div>
+              <form>
+                <div class="stack">
+                  <span class="field-label">Nome completo</span>
+                  <input class="input" type="text" placeholder="Amanda Marques" />
+                </div>
+                <div class="stack">
+                  <span class="field-label">Email</span>
+                  <input class="input" type="email" placeholder="seu@email.com" />
+                </div>
+                <div class="stack">
+                  <span class="field-label">Celular <span style="color: var(--muted)">(opcional)</span></span>
+                  <input class="input" type="tel" placeholder="(11) 99999-9999" />
+                </div>
+                <button class="pill primary pill-full">Receber link de entrada</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. HOME -->
+    <div class="frame-wrap">
+      <div class="frame-label">4. Home do membro</div>
+      <div class="frame-route">/home</div>
+      <div class="phone">
+        <div class="phone-content">
+          <div class="header">
+            <span class="brand">Toasting</span>
+            <button class="logout">Sair</button>
+          </div>
+          <div class="stage">
+            <p class="small" style="text-transform: uppercase; letter-spacing: 1px; color: var(--muted);">Olá, Amanda</p>
+            <p class="muted desc" style="margin-top: 8px;">Você é membro <span class="foreground" style="font-weight: 500">Amigos</span>. Seu desconto é de <span class="foreground" style="font-weight: 500">10%</span> e vale uma vez por dia em qualquer um dos nossos restaurantes.</p>
+            <button class="big-circle">Gerar<br>código</button>
+            <p class="footer-note">Toca pra gerar um código de 6 dígitos. Ele expira em 5 minutos — mostre ao garçom no momento de pedir.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. CODIGO ATIVO -->
+    <div class="frame-wrap">
+      <div class="frame-label">5. Código ativo (com timer)</div>
+      <div class="frame-route">/codigo</div>
+      <div class="phone">
+        <div class="phone-content">
+          <div class="header">
+            <span class="brand">Toasting</span>
+            <button class="logout">Sair</button>
+          </div>
+          <div class="stage">
+            <p class="code-eyebrow">Seu código · 10%</p>
+            <div class="code-digits">
+              <span>4</span><span>8</span><span>2</span><span>7</span><span>9</span><span>1</span>
+            </div>
+            <p class="code-name">Amanda Marques</p>
+            <p class="code-tenant">Grupo Piloto</p>
+            <p class="timer">4:32</p>
+            <p class="footer-note">Mostre esse código ao garçom no momento de pedir. Ele só funciona uma vez e some quando o tempo acabar.</p>
+            <button class="cancel">Cancelar e voltar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p style="text-align: center; color: #6e6862; font-size: 11px; margin-top: 64px;">
+    Estas são versões estáticas das telas — qualquer alteração de design feita aqui precisa ser replicada nos componentes React do <code>web/app/</code>.
+  </p>
+</body>
+</html>
