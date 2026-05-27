@@ -1,27 +1,55 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createServerClient } from "@supabase/ssr";
+import type { Database } from "@/lib/types/database";
 
+// Route Handler pattern for Supabase SSR in Next.js 16:
+// build the response first, then have the supabase client write its
+// auth cookies onto that exact response object. This guarantees the
+// session cookie survives the redirect.
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const errorDescription = url.searchParams.get("error_description");
+  const errorParam = url.searchParams.get("error");
 
-  if (errorDescription) {
-    return NextResponse.redirect(
-      new URL(`/login?erro=${encodeURIComponent(errorDescription)}`, request.url)
+  // Default redirect target — overridden below as we learn more.
+  let redirectTo = new URL("/home", request.url);
+  const response = NextResponse.redirect(redirectTo);
+
+  const supabase = createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  if (errorParam || errorDescription) {
+    redirectTo = new URL(
+      `/login?erro=${encodeURIComponent(errorDescription ?? errorParam ?? "link_invalido")}`,
+      request.url
     );
+    return NextResponse.redirect(redirectTo);
   }
+
   if (!code) {
     return NextResponse.redirect(new URL("/login?erro=link_invalido", request.url));
   }
 
-  const supabase = await createSupabaseServerClient();
-
-  // Exchange the URL code for a session. Sets auth cookies on the response.
   const { data: exchange, error: exchangeError } =
     await supabase.auth.exchangeCodeForSession(code);
 
   if (exchangeError || !exchange.session) {
+    console.error("[auth/callback] exchange failed", exchangeError);
     return NextResponse.redirect(
       new URL("/login?erro=link_expirado", request.url)
     );
@@ -29,18 +57,24 @@ export async function GET(request: NextRequest) {
 
   const user = exchange.session.user;
 
-  // Is there already a member row for this user?
-  const { data: existingMember } = await supabase
-    .from("members")
-    .select("id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  // Check via RPC (bypasses RLS) — avoids policy edge cases on brand-new sessions.
+  const { data: memberRows, error: memberCheckError } = (await (
+    supabase.rpc as unknown as (name: string) => Promise<{
+      data: Array<{ id: string }> | null;
+      error: { message: string } | null;
+    }>
+  )("get_current_member"));
 
-  if (existingMember) {
-    return NextResponse.redirect(new URL("/home", request.url));
+  if (memberCheckError) {
+    console.error("[auth/callback] get_current_member failed", memberCheckError);
   }
 
-  // First time landing here — look for invite metadata stashed at sign-up.
+  if (memberRows && memberRows.length > 0) {
+    // Already a member — keep the response (with cookies) and go home.
+    return response;
+  }
+
+  // First time: look for invite metadata stashed at signup.
   const meta = (user.user_metadata ?? {}) as {
     invite_code?: string;
     name?: string;
@@ -48,8 +82,12 @@ export async function GET(request: NextRequest) {
   };
 
   if (!meta.invite_code || !meta.name) {
-    // Orphan auth user without a member row and without an invite. Sign out
-    // and bounce to login with a helpful message.
+    console.warn(
+      "[auth/callback] missing invite metadata for user",
+      user.id,
+      user.email,
+      meta
+    );
     await supabase.auth.signOut();
     return NextResponse.redirect(
       new URL("/login?erro=sem_convite", request.url)
@@ -69,6 +107,7 @@ export async function GET(request: NextRequest) {
   }));
 
   if (consumeError) {
+    console.error("[auth/callback] consume_invite failed", consumeError);
     await supabase.auth.signOut();
     return NextResponse.redirect(
       new URL(
@@ -78,5 +117,6 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  return NextResponse.redirect(new URL("/home", request.url));
+  // Success — keep the response object (which has the auth cookies attached).
+  return response;
 }
