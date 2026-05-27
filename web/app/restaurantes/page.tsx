@@ -14,21 +14,46 @@ type Venue = {
   logo_url: string | null;
 };
 
-function initialsOf(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
+// Editorial color tokens cycled by venue order (so adding a venue stays simple).
+const CARD_PALETTE = [
+  "bg-card-1", // red - Giancarlo
+  "bg-card-2", // mustard - Quartinho
+  "bg-card-3", // sage - Dainer
+  "bg-card-4", // navy - Pope
+  "bg-card-5", // terracotta pink - Chanchada
+  "bg-card-6", // burnt orange - Guadalupe
+  "bg-card-7", // charcoal - Café 18 do Forte
+  "bg-card-8", // dusty purple - Deja Vu
+  "bg-card-9", // sand - Fatchia
+];
+
+function paletteFor(slug: string, index: number): string {
+  // Stable mapping by slug — fall back to index cycling.
+  const fixed: Record<string, string> = {
+    giancarlo: "bg-card-1",
+    quartinho: "bg-card-2",
+    dainer: "bg-card-3",
+    pope: "bg-card-4",
+    chanchada: "bg-card-5",
+    guadalupe: "bg-card-6",
+    "cafe-18-forte": "bg-card-7",
+    "deja-vu": "bg-card-8",
+    fatchia: "bg-card-9",
+  };
+  return fixed[slug] ?? CARD_PALETTE[index % CARD_PALETTE.length];
+}
+
+function neighborhoodOf(address: string | null): string {
+  if (!address) return "";
+  // Extract last comma-separated segment as a hint for now.
+  const parts = address.split(",").map((p) => p.trim()).filter(Boolean);
+  return parts[parts.length - 1] ?? "";
 }
 
 export default function RestaurantesPage() {
   const router = useRouter();
   const [member, setMember] = useState<StoredMember | null>(null);
   const [venues, setVenues] = useState<Venue[]>([]);
-  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,108 +70,100 @@ export default function RestaurantesPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  const filtered = venues.filter((v) =>
-    v.name.toLowerCase().includes(search.toLowerCase())
-  );
-
   if (!member) return null;
   const firstName = member.name.split(" ")[0];
+  const discount = Number(member.tier_discount_percent);
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-background">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 pt-8 pb-4">
+      <div className="flex items-center justify-between px-7 pt-7 pb-6">
         <Link
           href="/perfil"
-          className="avatar-gradient flex h-11 w-11 items-center justify-center rounded-full text-white font-mono text-sm font-bold shadow-md"
-        >
-          {initialsOf(member.name)}
-        </Link>
+          className="avatar-gradient h-12 w-12 rounded-full ring-1 ring-line"
+          aria-label="Perfil"
+        />
         <button
           type="button"
           onClick={() => {
             clearMember();
             router.replace("/entrar");
           }}
-          className="font-mono text-[11px] tracking-[1px] uppercase text-tertiary"
+          className="font-mono text-[10px] tracking-[2px] uppercase text-ink-mute"
         >
           Sair
         </button>
       </div>
 
-      {/* Greeting */}
-      <div className="px-6 pb-6">
-        <p className="text-[26px] leading-[1.1] text-tertiary">
+      {/* Editorial greeting */}
+      <div className="px-7 pb-8">
+        <p className="font-serif text-[28px] leading-none text-ink-mute">
           Olá, {firstName},
         </p>
-        <h1 className="mt-1 text-[28px] font-semibold leading-[1.15] text-black">
-          Aonde vamos beber<br />ou comer hoje?
+        <h1 className="mt-3 font-serif text-[44px] leading-[1.05] text-foreground">
+          Aonde vamos<br />beber ou comer<br />hoje?
         </h1>
-      </div>
-
-      {/* Tier badge + search */}
-      <div className="px-6 pb-4">
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-light px-3 py-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-blue" />
-          <span className="font-mono text-[11px] tracking-[1px] uppercase text-blue">
-            {member.tier_name} · {Number(member.tier_discount_percent)}% off
+        <div className="mt-5 inline-flex items-baseline gap-2">
+          <span className="font-mono text-[10px] tracking-[2px] uppercase text-ink-mute">
+            {member.tier_name}
           </span>
-        </div>
-        <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base text-tertiary">
-            🔍
+          <span className="font-mono text-[10px] text-ink-mute">·</span>
+          <span className="font-serif text-base text-accent">
+            {discount}% off
           </span>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar restaurante..."
-            className="w-full rounded-xl border border-border bg-[#f7f7f7] py-3.5 pl-11 pr-4 text-sm text-black outline-none transition-colors focus:border-blue"
-          />
         </div>
       </div>
 
-      {/* Cards */}
-      <div className="flex-1 px-6 pb-24">
+      {/* Stacked colored cards */}
+      <div className="flex-1 px-7 pb-10">
         {loading ? (
-          <p className="py-12 text-center font-mono text-sm text-tertiary">
-            Carregando...
-          </p>
-        ) : filtered.length === 0 ? (
-          <p className="py-12 text-center font-mono text-sm text-tertiary">
-            Nenhum restaurante encontrado.
+          <p className="py-8 text-center font-mono text-xs text-ink-mute tracking-[1px] uppercase">
+            Carregando casas...
           </p>
         ) : (
-          filtered.map((v, i) => (
-            <Link
-              key={v.id}
-              href={`/restaurante/${v.id}`}
-              className="glass mb-3 block rounded-2xl p-4 transition-transform hover:-translate-y-0.5 animate-fadeSlideUp"
-              style={{ animationDelay: `${i * 50}ms` }}
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black font-mono text-sm font-bold text-white">
-                  {initialsOf(v.name)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="truncate text-base font-semibold text-black">
-                      {v.name}
-                    </h3>
-                    <span className="shrink-0 rounded-full bg-blue px-2 py-0.5 font-mono text-[10px] font-bold text-white">
-                      -{Number(member.tier_discount_percent)}%
-                    </span>
+          <div className="flex flex-col gap-3">
+            {venues.map((v, i) => {
+              const palette = paletteFor(v.slug, i);
+              const neighborhood = neighborhoodOf(v.address);
+              return (
+                <Link
+                  key={v.id}
+                  href={`/restaurante/${v.id}`}
+                  className={`${palette} group relative block rounded-[20px] px-5 py-5 transition-transform hover:-translate-y-1 animate-fadeSlideUp`}
+                  style={{ animationDelay: `${i * 60}ms` }}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-mono text-[9px] tracking-[2px] uppercase opacity-70">
+                        Casa
+                      </p>
+                      <h3 className="mt-0.5 font-serif text-[26px] leading-tight">
+                        {v.name}
+                      </h3>
+                      {neighborhood && (
+                        <p className="mt-1 font-mono text-[10px] tracking-[1px] uppercase opacity-70">
+                          {neighborhood}
+                        </p>
+                      )}
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="font-serif text-[36px] leading-none">
+                        −{discount}%
+                      </p>
+                      <p className="mt-1 font-mono text-[9px] tracking-[1px] uppercase opacity-70">
+                        off
+                      </p>
+                    </div>
                   </div>
-                  {v.address && (
-                    <p className="mt-0.5 truncate font-mono text-[11px] text-text-secondary">
-                      📍 {v.address}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </Link>
-          ))
+                </Link>
+              );
+            })}
+          </div>
         )}
+
+        <p className="mt-10 text-center font-display text-2xl text-ink-mute">
+          Toasting
+        </p>
       </div>
     </div>
   );

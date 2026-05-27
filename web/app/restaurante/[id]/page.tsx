@@ -22,15 +22,17 @@ type Redemption = {
   venue_id: string;
 };
 
-function initialsOf(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
-}
+const VENUE_PALETTE: Record<string, string> = {
+  giancarlo: "bg-card-1",
+  quartinho: "bg-card-2",
+  dainer: "bg-card-3",
+  pope: "bg-card-4",
+  chanchada: "bg-card-5",
+  guadalupe: "bg-card-6",
+  "cafe-18-forte": "bg-card-7",
+  "deja-vu": "bg-card-8",
+  fatchia: "bg-card-9",
+};
 
 export default function RestauranteDetailPage({
   params,
@@ -86,94 +88,105 @@ export default function RestauranteDetailPage({
 
   if (loading || !member) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white">
-        <p className="font-mono text-sm text-tertiary">Carregando...</p>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <p className="font-mono text-xs tracking-[1px] uppercase text-ink-mute">
+          Carregando
+        </p>
       </div>
     );
   }
   if (!venue) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-white gap-4 px-6 text-center">
-        <p className="font-mono text-sm text-tertiary">
-          Restaurante não encontrado.
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background gap-4 px-6 text-center">
+        <p className="font-serif text-xl text-ink-mute">
+          Casa não encontrada.
         </p>
-        <Link href="/restaurantes" className="font-mono text-sm text-blue">
+        <Link href="/restaurantes" className="font-mono text-xs tracking-[1px] uppercase text-foreground underline">
           ← Voltar
         </Link>
       </div>
     );
   }
 
+  const palette = VENUE_PALETTE[venue.slug] ?? "bg-card-7";
   const discount = Number(member.tier_discount_percent);
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <div className="px-6 pt-8">
+    <div className="flex min-h-screen flex-col bg-background">
+      {/* Top */}
+      <div className="px-7 pt-7">
         <button
           type="button"
           onClick={() => router.push("/restaurantes")}
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-[#f7f7f7] px-3 py-2 font-mono text-xs text-black"
+          className="font-mono text-[10px] tracking-[2px] uppercase text-ink-mute"
         >
           ← Voltar
         </button>
       </div>
 
-      <div className="px-6 pt-6 pb-4 text-center">
-        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-black font-mono text-2xl font-bold text-white">
-          {initialsOf(venue.name)}
-        </div>
-        <h1 className="text-[28px] font-semibold leading-tight text-black">
+      {/* Hero slab — same palette as the card on the list */}
+      <div className={`${palette} mx-7 mt-5 rounded-[24px] px-6 py-8`}>
+        <p className="font-mono text-[9px] tracking-[2px] uppercase opacity-70">
+          Casa
+        </p>
+        <h1 className="mt-1 font-serif text-[44px] leading-[1.05]">
           {venue.name}
         </h1>
         {venue.address && (
-          <p className="mt-1.5 font-mono text-[11px] uppercase tracking-[1px] text-blue">
+          <p className="mt-4 font-mono text-[10px] tracking-[1px] uppercase opacity-75">
             📍 {venue.address}
           </p>
         )}
+        {venue.phone && (
+          <p className="mt-1 font-mono text-[10px] tracking-[1px] uppercase opacity-75">
+            ☎ {venue.phone}
+          </p>
+        )}
+        <div className="mt-6 flex items-baseline justify-between">
+          <span className="font-mono text-[10px] tracking-[2px] uppercase opacity-80">
+            Seu desconto
+          </span>
+          <span className="font-serif text-[64px] leading-none">
+            −{discount}%
+          </span>
+        </div>
       </div>
 
-      <div className="px-6 pb-8">
-        {/* Discount badge */}
-        <div className="rounded-2xl bg-blue p-6 text-center">
-          <p className="font-mono text-[11px] uppercase tracking-[2px] text-white">
-            Seu desconto
-          </p>
-          <p className="mt-1 text-5xl font-bold text-white">{discount}%</p>
-          <p className="font-mono text-[11px] text-white/85">em toda a conta</p>
-        </div>
-
-        {/* QR */}
+      {/* QR card */}
+      <div className="flex-1 px-7 pt-6 pb-10">
         {!redemption ? (
           <button
             type="button"
             onClick={generate}
             disabled={generating}
-            className="mt-6 w-full rounded-[14px] bg-black py-[18px] font-mono text-sm font-bold tracking-[1px] text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+            className="w-full rounded-full bg-foreground py-4 font-serif text-xl text-background transition-opacity hover:opacity-95 disabled:opacity-60"
           >
             {generating ? "Gerando..." : "Gerar QR Code"}
           </button>
         ) : (
-          <div className="glass mt-6 rounded-[20px] p-6 text-center animate-fadeSlideUp">
-            <p className="font-mono text-[11px] uppercase tracking-[2px] font-semibold text-blue">
+          <div className="rounded-[24px] bg-paper px-6 py-8 ring-1 ring-line animate-fadeSlideUp">
+            <p className="text-center font-mono text-[9px] tracking-[2px] uppercase text-ink-mute">
               Mostre ao garçom
             </p>
-            <div className="mt-5 inline-block rounded-2xl bg-white p-4 shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
-              <QRCodeSVG
-                value={JSON.stringify({
-                  code: redemption.code,
-                  venue_id: redemption.venue_id,
-                  expires_at: redemption.expires_at,
-                  discount: redemption.applied_percent,
-                })}
-                size={200}
-                level="H"
-              />
+            <div className="mt-5 flex justify-center">
+              <div className="rounded-2xl bg-background p-4 ring-1 ring-line">
+                <QRCodeSVG
+                  value={JSON.stringify({
+                    code: redemption.code,
+                    venue_id: redemption.venue_id,
+                    expires_at: redemption.expires_at,
+                    discount: redemption.applied_percent,
+                  })}
+                  size={200}
+                  level="H"
+                />
+              </div>
             </div>
-            <p className="mt-5 inline-block rounded-lg bg-[#f7f7f7] px-4 py-2.5 font-mono text-sm tracking-[4px] text-black">
+            <p className="mt-6 text-center font-serif text-3xl tracking-[6px] text-foreground">
               {redemption.code}
             </p>
-            <p className="mt-3 font-mono text-[11px] text-tertiary">
-              Válido por 2 horas. Uso único no {venue.name}.
+            <p className="mt-3 text-center font-mono text-[10px] tracking-[1px] uppercase text-ink-mute">
+              Válido por 2 horas · {venue.name}
             </p>
           </div>
         )}
@@ -184,8 +197,8 @@ export default function RestauranteDetailPage({
           </p>
         )}
 
-        <p className="mt-8 text-center font-mono text-[10px] tracking-[1px] uppercase text-tertiary">
-          Toasting · {member.name}
+        <p className="mt-10 text-center font-display text-2xl text-ink-mute">
+          Toasting
         </p>
       </div>
     </div>

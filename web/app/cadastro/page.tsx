@@ -58,43 +58,48 @@ export default function CadastroPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-white px-6 pt-12 pb-8">
-      <div className="mx-auto flex w-full max-w-[360px] flex-1 flex-col">
-        <div className="mb-10 text-center">
-          <h1 className="font-display text-5xl text-black">Toasting</h1>
-          <div className="mx-auto mt-3 h-1 w-12 rounded-full bg-blue" />
-          <p className="mt-4 font-mono text-xs tracking-[2px] text-tertiary uppercase">
-            Complete seu cadastro
+    <div className="flex min-h-screen flex-col bg-background px-7 pt-10 pb-8">
+      <div className="flex flex-1 flex-col">
+        <div className="mb-8">
+          <p className="font-serif text-[28px] leading-none text-ink-mute">
+            Quase lá,
           </p>
+          <h1 className="mt-2 font-serif text-[44px] leading-[1.05] text-foreground">
+            Como você<br />se chama?
+          </h1>
         </div>
 
         <form onSubmit={submit} className="flex flex-col gap-4">
-          <label className="glass rounded-xl p-4 backdrop-blur-[20px]">
-            <span className="block font-mono text-[10px] tracking-[1px] uppercase text-tertiary mb-1">
-              Seu nome
-            </span>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Amanda Marques"
-              autoComplete="name"
-              className="w-full bg-transparent text-base text-black outline-none placeholder-[#bfbfbf]"
-            />
-          </label>
-          <label className="glass rounded-xl p-4 backdrop-blur-[20px]">
-            <span className="block font-mono text-[10px] tracking-[1px] uppercase text-tertiary mb-1">
-              Email
-            </span>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="voce@email.com"
-              autoComplete="email"
-              className="w-full bg-transparent text-base text-black outline-none placeholder-[#bfbfbf]"
-            />
-          </label>
+          <div className="rounded-[20px] bg-paper px-5 py-5 ring-1 ring-line">
+            <label className="block">
+              <span className="font-mono text-[9px] tracking-[2px] uppercase text-ink-mute">
+                Nome completo
+              </span>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Amanda Marques"
+                autoComplete="name"
+                className="mt-1 w-full bg-transparent font-serif text-2xl text-foreground outline-none placeholder-[#b8afa0]"
+              />
+            </label>
+          </div>
+          <div className="rounded-[20px] bg-paper px-5 py-5 ring-1 ring-line">
+            <label className="block">
+              <span className="font-mono text-[9px] tracking-[2px] uppercase text-ink-mute">
+                Email
+              </span>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="voce@email.com"
+                autoComplete="email"
+                className="mt-1 w-full bg-transparent font-serif text-2xl text-foreground outline-none placeholder-[#b8afa0]"
+              />
+            </label>
+          </div>
 
           {error && (
             <p className="text-center font-mono text-sm text-danger" role="alert">
@@ -105,14 +110,14 @@ export default function CadastroPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 rounded-xl bg-black py-4 font-mono text-sm font-bold tracking-[1px] text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+            className="mt-3 rounded-full bg-foreground py-4 font-serif text-xl text-background transition-opacity hover:opacity-95 disabled:opacity-60"
           >
             {loading ? "Entrando..." : "Continuar"}
           </button>
           <button
             type="button"
             onClick={() => router.replace("/entrar")}
-            className="rounded-xl border border-border bg-[#f7f7f7] py-3 text-sm text-black"
+            className="font-mono text-[10px] tracking-[1px] uppercase text-ink-mute"
           >
             ← Voltar
           </button>

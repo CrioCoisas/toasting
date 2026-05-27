@@ -6,6 +6,9 @@ import { isValidPin, loadMember } from "@/lib/auth-pin";
 
 const PIN_LENGTH = 10;
 
+const KEYS_TOP = ["A", "M", "I", "G", "O", "S", "V", "P", "C", "H", "E", "F"];
+const KEYS_NUMS = ["2", "0", "6"];
+
 export default function EntrarPage() {
   const router = useRouter();
   const [pin, setPin] = useState("");
@@ -34,7 +37,7 @@ export default function EntrarPage() {
       return;
     }
     if (!isValidPin(normalized)) {
-      setError("Código inválido. Pede pro anfitrião.");
+      setError("Código inválido.");
       setShake(true);
       setTimeout(() => setShake(false), 500);
       setPin("");
@@ -46,161 +49,91 @@ export default function EntrarPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-white px-6 pt-12 pb-8">
-      <div
-        className={`mx-auto flex w-full max-w-[360px] flex-1 flex-col ${
-          shake ? "animate-shake" : ""
-        }`}
-      >
-        <div className="mb-10 text-center">
-          <h1 className="font-display text-5xl text-black">Toasting</h1>
-          <div className="mx-auto mt-3 h-1 w-12 rounded-full bg-blue" />
-          <p className="mt-4 font-mono text-xs tracking-[2px] text-tertiary uppercase">
-            Insira seu código de acesso
+    <div className="flex min-h-screen flex-col bg-background px-7 pt-10 pb-8">
+      <div className={`flex flex-1 flex-col ${shake ? "animate-shake" : ""}`}>
+        <div className="mb-8">
+          <p className="font-serif text-[28px] leading-none text-ink-mute">
+            Bem-vindo,
           </p>
+          <h1 className="mt-2 font-serif text-[44px] leading-[1.05] text-foreground">
+            Insira seu código<br />de acesso.
+          </h1>
         </div>
 
-        <div className="mb-2 flex justify-center gap-2">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-3 w-3 rounded-full transition-colors ${
-                i < pin.length ? "bg-blue" : "bg-[#e8e8e8]"
-              }`}
-            />
-          ))}
+        <div className="mb-6 rounded-[20px] bg-paper px-5 py-5 ring-1 ring-line">
+          <p className="font-mono text-[9px] tracking-[2px] uppercase text-ink-mute">
+            Código
+          </p>
+          <p className="mt-1 font-serif text-[28px] tracking-[6px] text-foreground min-h-[34px]">
+            {pin || "—"}
+          </p>
+          <div className="mt-3 flex gap-1.5">
+            {Array.from({ length: PIN_LENGTH }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-[3px] flex-1 rounded-full ${
+                  i < pin.length ? "bg-accent" : "bg-line"
+                }`}
+              />
+            ))}
+          </div>
         </div>
-        <p className="mb-1 text-center font-mono text-base tracking-[4px] text-black h-6">
-          {pin || " "}
-        </p>
-        <p className="mb-6 text-center text-sm text-danger h-5" role="alert">
+
+        <p className="mb-4 text-center font-mono text-[11px] tracking-[1px] text-danger min-h-[16px]">
           {error ?? " "}
         </p>
 
-        <Numpad
-          onDigit={appendChar}
-          onBackspace={backspace}
-          onSubmit={submit}
-          submitting={loading}
-        />
+        <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-4 gap-2">
+            {KEYS_TOP.map((c) => (
+              <KeyButton key={c} char={c} onClick={() => appendChar(c)} />
+            ))}
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {KEYS_NUMS.map((c) => (
+              <KeyButton key={c} char={c} onClick={() => appendChar(c)} mono />
+            ))}
+            <button
+              type="button"
+              onClick={backspace}
+              className="rounded-2xl bg-cream-deep py-4 font-mono text-base text-foreground active:scale-95 ring-1 ring-line"
+            >
+              ←
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={loading}
+            className="mt-3 rounded-full bg-foreground py-4 font-serif text-xl text-background transition-opacity hover:opacity-95 disabled:opacity-60"
+          >
+            {loading ? "Entrando..." : "Entrar"}
+          </button>
+        </div>
 
-        <p className="mt-6 text-center font-mono text-[11px] tracking-[1px] text-tertiary">
-          Solicite o código ao anfitrião do clube.
+        <p className="mt-auto pt-8 text-center font-mono text-[10px] tracking-[1px] uppercase text-ink-mute">
+          Solicite o código ao anfitrião do clube
         </p>
       </div>
     </div>
   );
 }
 
-function Numpad({
-  onDigit,
-  onBackspace,
-  onSubmit,
-  submitting,
-}: {
-  onDigit: (c: string) => void;
-  onBackspace: () => void;
-  onSubmit: () => void;
-  submitting: boolean;
-}) {
-  const rows: string[][] = [
-    ["1", "2", "3"],
-    ["4", "5", "6"],
-    ["7", "8", "9"],
-  ];
-  const letters: string[] = ["A", "I", "M", "O", "G", "S", "V", "P", "C", "H", "E", "F"];
-  const [mode, setMode] = useState<"digits" | "letters">("letters");
-
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex justify-center gap-2">
-        <button
-          type="button"
-          onClick={() => setMode("letters")}
-          className={`flex-1 rounded-lg border px-2 py-1.5 font-mono text-[11px] tracking-[1px] transition-colors ${
-            mode === "letters"
-              ? "border-blue bg-blue-light text-blue"
-              : "border-border bg-[#f7f7f7] text-text-secondary"
-          }`}
-        >
-          ABC
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("digits")}
-          className={`flex-1 rounded-lg border px-2 py-1.5 font-mono text-[11px] tracking-[1px] transition-colors ${
-            mode === "digits"
-              ? "border-blue bg-blue-light text-blue"
-              : "border-border bg-[#f7f7f7] text-text-secondary"
-          }`}
-        >
-          123
-        </button>
-      </div>
-
-      {mode === "digits" ? (
-        <div className="grid grid-cols-3 gap-2">
-          {rows.flat().map((d) => (
-            <NumpadKey key={d} char={d} onClick={() => onDigit(d)} />
-          ))}
-          <button
-            type="button"
-            onClick={onBackspace}
-            className="rounded-xl border border-border bg-[#f7f7f7] py-4 font-mono text-base text-black active:scale-95"
-          >
-            ←
-          </button>
-          <NumpadKey char="0" onClick={() => onDigit("0")} />
-          <button
-            type="button"
-            onClick={onSubmit}
-            disabled={submitting}
-            className="rounded-xl border border-transparent bg-black py-4 font-mono text-base font-bold text-white active:scale-95 disabled:opacity-60"
-          >
-            ✓
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-4 gap-2">
-          {letters.map((l) => (
-            <NumpadKey key={l} char={l} onClick={() => onDigit(l)} small />
-          ))}
-          <button
-            type="button"
-            onClick={onBackspace}
-            className="col-span-2 rounded-xl border border-border bg-[#f7f7f7] py-3.5 font-mono text-sm text-black active:scale-95"
-          >
-            ← Apagar
-          </button>
-          <button
-            type="button"
-            onClick={onSubmit}
-            disabled={submitting}
-            className="col-span-2 rounded-xl border border-transparent bg-black py-3.5 font-mono text-sm font-bold text-white active:scale-95 disabled:opacity-60"
-          >
-            {submitting ? "..." : "Entrar"}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function NumpadKey({
+function KeyButton({
   char,
   onClick,
-  small = false,
+  mono = false,
 }: {
   char: string;
   onClick: () => void;
-  small?: boolean;
+  mono?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-xl border border-border bg-[#f7f7f7] font-mono text-black active:scale-95 ${
-        small ? "py-3 text-sm" : "py-4 text-lg font-bold"
+      className={`rounded-2xl bg-paper py-4 text-foreground ring-1 ring-line active:scale-95 ${
+        mono ? "font-mono text-lg" : "font-serif text-xl"
       }`}
     >
       {char}
